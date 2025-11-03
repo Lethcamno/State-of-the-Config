@@ -126,9 +126,9 @@ With prefix arg (C-u), keep focus in the source buffer."
 ;latex extensions suggested by michael nueper for pdf viewing
 (use-package! auctex
   :config
-  (setq TeX-view-program-selection '((output-pdf "Sioyek")))
-  (setq +latex-viewers '(sioyek)))
-(setq lsp-tex-server 'texlab)
+  (setq TeX-view-program-selection '((output-pdf "PDF Tools")))
+  (setq +latex-viewers '(pdf tools)))
+(setq lsp-tex-server 'digestif)
 
 ;;essential for using org-roam
 ;1 - these are basic org roam functionalities
@@ -138,7 +138,7 @@ With prefix arg (C-u), keep focus in the source buffer."
   :init
   (setq org-roam-v2-ack t)
   :custom
-  (org-roam-directory "~/Documents/Zettelkasten/")
+  (org-roam-directory "~/Emacs-Zettelkasten/")
   :bind (("C-c n l" . org-roam-buffer-toggle)
          ("C-c n f" . org-roam-node-find)
          ("C-c n i" . org-roam-node-insert))
@@ -197,7 +197,7 @@ With prefix arg (C-u), keep focus in the source buffer."
   :config
   (defun preview-larger-previews ()
     (setq preview-scale-function
-          (lambda () (* 1.25
+          (lambda () (* 1
                    (funcall (preview-scale-from-face)))))))
 
 ;; CDLatex settings
@@ -289,16 +289,51 @@ With prefix arg (C-u), keep focus in the source buffer."
         (cdlatex-tab)
       (org-table-next-field))))
 
-;; (map! :i :desc "YAS Expand" #'yas-next-field-or-cdlatex)
-(use-package org-latex-preview
-  :config
+;;potentially questionable latex code (which seems to work fine)
+(after! tex
+  (add-to-list 'TeX-command-list
+               '("LatexMk" "latexmk -pdf -synctex=1 %s" TeX-run-TeX nil t)))
+(after! org
+  (setq org-startup-with-latex-preview t
+        org-format-latex-options (plist-put org-format-latex-options :scale 1.2)))
 
-  (add-hook 'org-mode-hook 'org-latex-preview-mode)
+(after! org
+  (setq org-latex-preview-auto-toggle t))
 
-  (setq org-latex-preview-mode-display-live t)
+;;this is for ensuring I can edit latex previews normally
+(use-package! org-fragtog
+  :after org
+  :hook (org-mode . org-fragtog-mode))
 
-  ;; More immediate live-previews -- the default delay is 1 second
-  (setq org-latex-preview-mode-update-delay 0.25))
+;;this is to ensure pdfs are presented as I want after rendering
+(setq split-height-threshold nil)
+(setq split-width-threshold 0)
 
-;;enables the org-mode checkbox
-(require 'org-checkbox)
+;;an attempt to get racket to be usable in code blocks
+(with-eval-after-load 'geiser
+  (setq geiser-active-implementations '(racket))
+  (setq geiser-racket-binary "/usr/bin/racket")  ;; path to your Racket binary
+)
+
+;;this is to get slime working
+
+(load (expand-file-name "~/quicklisp/slime-helper.el"))
+;; Replace "sbcl" with the path to your implementation
+(setq inferior-lisp-program "sbcl")
+(require 'slime)
+(slime-setup '(slime-fancy))                ;; optional extra modules for SLIME
+
+
+;; ;; (map! :i :desc "YAS Expand" #'yas-next-field-or-cdlatex)
+;; (use-package org-latex-preview
+;;   :config
+
+;;   (add-hook 'org-mode-hook 'org-latex-preview-mode)
+
+;;   (setq org-latex-preview-mode-display-live t)
+
+;;   ;; More immediate live-previews -- the default delay is 1 second
+;;   (setq org-latex-preview-mode-update-delay 0.25))
+
+;; enables the org-mode checkbox
+;; (require 'org-checkbox)

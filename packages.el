@@ -47,6 +47,8 @@
 ;; (unpin! pinned-package another-pinned-package)
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;; (unpin! t)
+(package! org-pomodoro)
+(package! org-timeblock)
 (package! org-fragtog)
 (package! geiser-guile)
 (package! geiser)
@@ -80,3 +82,13 @@
   :pin nil)
 (unpin! org)
 (package! org-bullets)
+
+
+(use-package uiua-mode
+  :mode "\\.ua\\'"
+  :ensure t)  ; or :straight t if using straight.el
+
+
+;; The org-timeblock ui
+(use-package org-timeblock :commands ( org-timeblock-mode org-timeblock ))
+

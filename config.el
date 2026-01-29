@@ -18,7 +18,7 @@
 ;; - `doom-symbol-font' -- for symbols
 ;; - `doom-serif-font' -- for the `fixed-pitch-serif' face
 ;;
-;; See 'C-h v doom-font' for documentation and more examples of what they
+;; See 'C-h v doom-font' for documentation and more examples of what the
 ;; accept. For example:
 ;;
 ;;(setq doom-font (font-spec :family "Fira Code" :size 12 :weight 'semi-light)
@@ -45,7 +45,7 @@
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
 ;;
-;;   (after! PACKAGE
+;;   (after! PACKAG
 ;;     (setq x y))
 ;;
 ;; The exceptions to this rule:
@@ -118,7 +118,7 @@ With prefix arg (C-u), keep focus in the source buffer."
 (setq org-hide-emphasis-markers t)
 
 ;; ;inserting this permitted the quote notation to become usable
-;; (require 'org-tempo)
+(require 'org-tempo)
 
 ;this logs the time of completion for an org Task
 (setq org-log-done 'time)
@@ -158,14 +158,23 @@ With prefix arg (C-u), keep focus in the source buffer."
         org-roam-ui-update-on-save t
         org-roam-ui-open-on-start t))
 
+;;This is meant to ensure the slugs and titles are the same
+(with-eval-after-load 'org-roam
+  (setq org-roam-capture-templates
+        '(("d" "default" plain "%?"
+           :if-new (file+head "${slug}.org"
+                              "#+title: ${title}\n")
+           :unnarrowed t))))
+
 ;; This elisp code uses use-package, a macro to simplify configuration. It will
 ;; install it if it's not available, so please edit the following code as
 ;; appropriate before running it.
 
 ;; Note that this file does not define any auto-expanding YaSnippets.
 
-
 ;; AucTeX settings - almost no changes
+(package-install 'use-package)
+
 (use-package latex
   :ensure auctex
   :hook ((LaTeX-mode . prettify-symbols-mode))
@@ -185,7 +194,7 @@ With prefix arg (C-u), keep focus in the source buffer."
                                           calc-prefer-frac t
                                           calc-angle-mode rad)))))
           (t (let ((l (thing-at-point 'line)))
-               (end-of-line 1) (kill-line 0)
+               (end-of-line 1) (kill-line 0) 
                (insert (calc-eval `(,l
                                     calc-language latex
                                     calc-prefer-frac t
@@ -197,16 +206,77 @@ With prefix arg (C-u), keep focus in the source buffer."
   :config
   (defun preview-larger-previews ()
     (setq preview-scale-function
-          (lambda () (* 1
+          (lambda () (* 1.25
                    (funcall (preview-scale-from-face)))))))
 
 ;; CDLatex settings
 (use-package cdlatex
   :ensure t
   :hook (LaTeX-mode . turn-on-cdlatex)
-  :bind (:map cdlatex-mode-map
+  :bind (:map cdlatex-mode-map 
               ("<tab>" . cdlatex-tab)))
 
+;; Yasnippet settings
+(use-package yasnippet
+  :ensure t
+  :hook ((LaTeX-mode . yas-minor-mode)
+         (post-self-insert . my/yas-try-expanding-auto-snippets))
+  :config
+  (use-package warnings
+    :config
+    (cl-pushnew '(yasnippet backquote-change)
+                warning-suppress-types
+                :test 'equal))
+
+  (setq yas-triggers-in-field t)
+  
+  ;; Function that tries to autoexpand YaSnippets
+  ;; The double quoting is NOT a typo!
+  (defun my/yas-try-expanding-auto-snippets ()
+    (when (and (boundp 'yas-minor-mode) yas-minor-mode)
+      (let ((yas-buffer-local-condition ''(require-snippet-condition . auto)))
+        (yas-expand)))))
+
+;; CDLatex integration with YaSnippet: Allow cdlatex tab to work inside Yas
+;; fields
+(use-package cdlatex
+  :hook ((cdlatex-tab . yas-expand)
+         (cdlatex-tab . cdlatex-in-yas-field))
+  :config
+  (use-package yasnippet
+    :bind (:map yas-keymap
+           ("<tab>" . yas-next-field-or-cdlatex)
+           ("TAB" . yas-next-field-or-cdlatex))
+    :config
+    (defun cdlatex-in-yas-field ()
+      ;; Check if we're at the end of the Yas field
+      (when-let* ((_ (overlayp yas--active-field-overlay))
+                  (end (overlay-end yas--active-field-overlay)))
+        (if (>= (point) end)
+            ;; Call yas-next-field if cdlatex can't expand here
+            (let ((s (thing-at-point 'sexp)))
+              (unless (and s (assoc (substring-no-properties s)
+                                    cdlatex-command-alist-comb))
+                (yas-next-field-or-maybe-expand)
+                t))
+          ;; otherwise expand and jump to the correct location
+          (let (cdlatex-tab-hook minp)
+            (setq minp
+                  (min (save-excursion (cdlatex-tab)
+                                       (point))
+                       (overlay-end yas--active-field-overlay)))
+            (goto-char minp) t))))
+
+    (defun yas-next-field-or-cdlatex nil
+      (interactive)
+      "Jump to the next Yas field correctly with cdlatex active."
+      (if
+          (or (bound-and-true-p cdlatex-mode)
+              (bound-and-true-p org-cdlatex-mode))
+          (cdlatex-tab)
+        (yas-next-field-or-maybe-expand)))))
+
+;; Array/tabular input with org-tables and cdlatex 
 (use-package org-table
   :after cdlatex
   :bind (:map orgtbl-mode-map
@@ -261,7 +331,7 @@ With prefix arg (C-u), keep focus in the source buffer."
       (align-regexp (region-beginning) (region-end) "\\([:space:]*\\)& ")
       (orgtbl-mode -1)
       (advice-remove 'orgtbl-ctrl-c-ctrl-c #'lazytab-orgtbl-replace)))
-
+  
   (defun lazytab-orgtbl-to-amsmath (table params)
     (orgtbl-to-generic
      table
@@ -337,3 +407,41 @@ With prefix arg (C-u), keep focus in the source buffer."
 
 ;; enables the org-mode checkbox
 ;; (require 'org-checkbox)
+
+;; allows you to see scheduled and unscheduled tasks in org agenda the
+(setq org-agenda-custom-commands
+      '(("d" "Daily agenda and all TODOs"
+         ((tags "PRIORITY=\"A\""
+                ((org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+                 (org-agenda-overriding-header "High-priority unfinished tasks:")))
+          (agenda "" ((org-agenda-ndays 1)))
+          (alltodo ""
+                   ((org-agenda-skip-function '(or (air-org-skip-subtree-if-habit)
+                                                   (air-org-skip-subtree-if-priority ?A)
+                                                   (org-agenda-skip-if nil '(scheduled deadline))))
+                    (org-agenda-overriding-header "ALL normal priority tasks:"))))
+         ((org-agenda-compact-blocks t)))))
+
+(defun air-org-skip-subtree-if-habit ()
+  "Skip an agenda entry if it has a STYLE property equal to \"habit\"."
+  (let ((subtree-end (save-excursion (org-end-of-subtree t))))
+    (if (string= (org-entry-get nil "STYLE") "habit")
+        subtree-end
+      nil)))
+
+;;implements pomodoro and timeblock ui
+(after! org
+  (dolist (pkg '(org-timeblock org-pomodoro))
+    (require pkg)))
+
+;; auto-load agda-mode for .agda and .lagda.md
+(setq auto-mode-alist
+   (append
+     '(("\\.agda\\'" . agda2-mode)
+       ("\\.lagda.md\\'" . agda2-mode))
+     auto-mode-alist))
+
+;setting the default font
+(setq doom-font (font-spec :family "Monospace" :size 14))
+(setq doom-variable-pitch-font (font-spec :family "Monospace" :size 14))
+

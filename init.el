@@ -113,9 +113,9 @@
        ;;tty               ; improve the terminal Emacs experience
 
        :lang
-       ;;agda              ; types of types of types of types...
+       agda              ; types of types of types of types...
        ;;beancount         ; mind the GAAP
-       ;;(cc +lsp)         ; C > C++ == 1
+       (cc +lsp)         ; C > C++ == 1
        ;;clojure           ; java with a lisp
        common-lisp       ; this is a comment
        coq               ; proofs-as-programs
@@ -177,6 +177,9 @@
        ;;web               ; the tubes
        yaml              ; JSON, but readable
        ;;zig               ; C, but simpler
+       (add-to-list 'load-path "~/Downloads/bqn-mode")
+       (require 'bqn-mode)
+       (add-to-list 'auto-mode-alist '("\\.bqn\\'" . bqn-mode))
 
        :email
        ;; (mu4e +org +gmail)
@@ -193,3 +196,4 @@
        :config
        ;;literate
        (default +bindings +smartparens))
+

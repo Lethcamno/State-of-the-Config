@@ -206,7 +206,7 @@ With prefix arg (C-u), keep focus in the source buffer."
   :config
   (defun preview-larger-previews ()
     (setq preview-scale-function
-          (lambda () (* 1.25
+          (lambda () (* 0.90
                    (funcall (preview-scale-from-face)))))))
 
 ;; CDLatex settings
@@ -359,6 +359,7 @@ With prefix arg (C-u), keep focus in the source buffer."
         (cdlatex-tab)
       (org-table-next-field))))
 
+
 ;;potentially questionable latex code (which seems to work fine)
 (after! tex
   (add-to-list 'TeX-command-list
@@ -367,8 +368,8 @@ With prefix arg (C-u), keep focus in the source buffer."
   (setq org-startup-with-latex-preview t
         org-format-latex-options (plist-put org-format-latex-options :scale 1.2)))
 
-(after! org
-  (setq org-latex-preview-auto-toggle t))
+;; (after! org
+;;   (setq org-latex-preview-auto-toggle t))
 
 ;;this is for ensuring I can edit latex previews normally
 (use-package! org-fragtog
@@ -394,16 +395,15 @@ With prefix arg (C-u), keep focus in the source buffer."
 (slime-setup '(slime-fancy))                ;; optional extra modules for SLIME
 
 
-;; ;; (map! :i :desc "YAS Expand" #'yas-next-field-or-cdlatex)
-;; (use-package org-latex-preview
-;;   :config
+;; (map! :i :desc "YAS Expand" #'yas-next-field-or-cdlatex)
+;; ;;ChatGPT GENERATED org-latex-preview
+;; (after! org
+;;   ;; Enable the minor mode automatically
+;;   (add-hook 'org-mode-hook #'org-latex-preview-mode)
 
-;;   (add-hook 'org-mode-hook 'org-latex-preview-mode)
-
-;;   (setq org-latex-preview-mode-display-live t)
-
-;;   ;; More immediate live-previews -- the default delay is 1 second
-;;   (setq org-latex-preview-mode-update-delay 0.25))
+;;   ;; Live previews while typing
+;;   (setq org-latex-preview-mode-display-live t
+;;         org-latex-preview-mode-update-delay 0.25))
 
 ;; enables the org-mode checkbox
 ;; (require 'org-checkbox)
@@ -445,3 +445,12 @@ With prefix arg (C-u), keep focus in the source buffer."
 (setq doom-font (font-spec :family "Monospace" :size 14))
 (setq doom-variable-pitch-font (font-spec :family "Monospace" :size 14))
 
+;;making org navigation faster
+(keymap-global-set "M-i" 'org-next-visible-heading)
+(keymap-global-set "M-o" 'org-previous-visible-heading)
+(keymap-global-set "M-p" 'other-window)
+(keymap-global-set "M-[" 'find-file)
+
+;;RefTeX Installation
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
+(add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode

@@ -388,11 +388,11 @@ With prefix arg (C-u), keep focus in the source buffer."
 
 ;;this is to get slime working
 
-(load (expand-file-name "~/quicklisp/slime-helper.el"))
-;; Replace "sbcl" with the path to your implementation
-(setq inferior-lisp-program "sbcl")
-(require 'slime)
-(slime-setup '(slime-fancy))                ;; optional extra modules for SLIME
+;; (load (expand-file-name "~/quicklisp/slime-helper.el"))
+;; ;; Replace "sbcl" with the path to your implementation
+;; (setq inferior-lisp-program "sbcl")
+;; (require 'slime)
+;; (slime-setup '(slime-fancy))                ;; optional extra modules for SLIME
 
 
 ;; (map! :i :desc "YAS Expand" #'yas-next-field-or-cdlatex)

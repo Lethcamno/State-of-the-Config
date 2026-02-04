@@ -177,10 +177,8 @@
        ;;web               ; the tubes
        yaml              ; JSON, but readable
        ;;zig               ; C, but simpler
-       (add-to-list 'load-path "~/Downloads/bqn-mode")
+       (add-to-list 'load-path "~/bqn-mode/")
        (require 'bqn-mode)
-       (add-to-list 'auto-mode-alist '("\\.bqn\\'" . bqn-mode))
-
        :email
        ;; (mu4e +org +gmail)
        ;;notmuch

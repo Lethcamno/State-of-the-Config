@@ -91,4 +91,7 @@
 
 ;; The org-timeblock ui
 (use-package org-timeblock :commands ( org-timeblock-mode org-timeblock ))
+;;BQN-Mode
+(package! bqn-mode)
+
 
